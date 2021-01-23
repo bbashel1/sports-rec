@@ -5,7 +5,7 @@
 		<h2>{{ $team->get('name') }}</h2>
 		<h3>Average: {{ number_format($team->get('average'), 3) }}</h3>
 		<br/>
-		<table>	
+		<table>
 			<thead>
 				<tr>
 					<th>#</th>
@@ -27,7 +27,7 @@
 							{{ $player->get('isGoalie') ? 'Yes' : 'No' }}
 						</td>
 						<td>
-							{{ $player->get('ranking') }}
+							{{ $player->get('ranking')->ranking }}
 						</td>
 					</tr>
 				@endforeach

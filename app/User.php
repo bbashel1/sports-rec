@@ -2,12 +2,14 @@
 
 namespace App;
 
+use App\Model\User\traits\Relationship\UserRelationship;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class User extends Model
 {
+    use UserRelationship;
     public $timestamps = false;
 
     /**
@@ -20,12 +22,12 @@ class User extends Model
     {
         return $query->where('user_type', 'player');
     }
-    
+
     public function getIsGoalieAttribute(): bool
     {
         return (bool) $this->can_play_goalie;
     }
-    
+
     public function getFullnameAttribute(): string
     {
         return Str::title($this->first_name . ' ' . $this->last_name);

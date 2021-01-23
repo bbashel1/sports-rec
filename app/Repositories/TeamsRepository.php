@@ -22,7 +22,7 @@ class TeamsRepository
     {
         return $this->setPlayers($players)->generateTeams();
     }
-    
+
     protected function generateTeams()
     {
         $teams = collect([])
@@ -36,26 +36,26 @@ class TeamsRepository
                 ->recursive();
 
         $players = $this->getSortedPlayers();
-        $maxPlayers = $this->maxTeamPlayers();
 
+        $maxPlayers = $this->maxTeamPlayers();
         foreach($players as $player) {
             // re-sort teams before each assignment, assigning next best player to lowest ranked team
             $teams = $teams->sort(function ($a, $b) {
-                return ($a->get('players')->sum('ranking') < $b->get('players')->sum('ranking')) ? -1 : 1;
+                return ($a->get('players')->sum('ranking.ranking') < $b->get('players')->sum('ranking.ranking')) ? -1 : 1;
             });
             $teamPlayers = $teams->first()->get('players');
 
 
             if(count($teamPlayers) < $maxPlayers) {
-				$teamPlayers->push(collect($player->only(['fullname', 'isGoalie', 'ranking'])));	
+				$teamPlayers->push(collect($player->only(['fullname', 'isGoalie', 'ranking'])));
 			}
         }
 
         // Add additional required data about the teams based on players
         $teams = $teams->map(function($value) {
             return $value->merge([
-                'average' => $value->get('players')->avg('ranking'),
-                'rankSum' => $value->get('players')->sum('ranking')
+                'average' => $value->get('players')->avg('ranking.ranking'),
+                'rankSum' => $value->get('players')->sum('ranking.ranking')
             ]);
         });
 
@@ -69,22 +69,20 @@ class TeamsRepository
     {
         return $this->faker->company;
     }
-    
+
     /**
      * Return a collection of sorted players
      * goalies first
      */
     protected function getSortedPlayers(): Collection
     {
-    	$goaliePlayers = $this->getGoalies()->sortByDesc('ranking');
-
-        $playersSortedByRanking = $this->players->whereNotIn('id', $goaliePlayers->pluck('id')->all())->sortByDesc('ranking');
-        
+    	$goaliePlayers = $this->getGoalies();
+        $playersSortedByRanking = $this->players->whereNotIn('id', $goaliePlayers->pluck('id')->all())->sortByDesc('ranking.ranking');
 		return $goaliePlayers->concat($playersSortedByRanking);
     }
 
     /**
-     * Return number of teams we can generate 
+     * Return number of teams we can generate
      * with at least one goalie
      */
     protected function getTeamNumberWithGoalies(): int
@@ -95,9 +93,9 @@ class TeamsRepository
     /**
      * Filter players to return only goalies
      */
-    protected function getGoalies(): Collection
+    protected function getGoalies() : Collection
     {
-        return $this->players->where('can_play_goalie', 1);
+        return $this->players->where('can_play_goalie', 1)->sortByDesc('ranking.ranking');
     }
 
     /**
@@ -134,7 +132,7 @@ class TeamsRepository
 
     /**
      * Get the value of players
-     */ 
+     */
     public function getPlayers()
     {
         return $this->players;
@@ -144,7 +142,7 @@ class TeamsRepository
      * Set the value of players
      *
      * @return  self
-     */ 
+     */
     public function setPlayers($players)
     {
         $this->players = $players;
